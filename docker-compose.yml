@@ -14,6 +14,10 @@ services:
       - ${HOST_POOL_PATH}:${HOST_POOL_PATH}:ro
       - ${SNAPRAID_CONF_PATH}:${SNAPRAID_CONF_PATH}:ro
       - /var/run/docker.sock:/var/run/docker.sock
+      # SnapRAID needs access to the underlying data and parity disks.
+      # Assuming they are mounted under /mnt (e.g. /mnt/parity1, /mnt/disk1).
+      # We mount /mnt recursively. Remove :ro if you plan to use sync/fix.
+      - /mnt:/mnt
 
     # Optional: constrain resources a bit
     deploy:
