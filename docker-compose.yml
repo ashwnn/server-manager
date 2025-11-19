@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  discord-server-bot:
+    build:
+      context: ./bot
+    container_name: discord-server-bot
+    env_file:
+      - .env
+    restart: unless-stopped
+
+    # Give the container access to host resources via bind mounts
+    volumes:
+      - ${HOST_POOL_PATH}:${HOST_POOL_PATH}:ro
+      - ${SNAPRAID_CONF_PATH}:${SNAPRAID_CONF_PATH}:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    # Optional: constrain resources a bit
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M

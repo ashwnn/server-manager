@@ -1,0 +1,4 @@
+py-cord
+qbittorrent-api
+docker
+python-dotenv
