@@ -11,6 +11,8 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     print("------")
+    # Bepo personality: Apologetic and loyal
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="the server... I'm sorry!"))
 
 # Load extensions
 extensions = [
