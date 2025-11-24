@@ -1,98 +1,160 @@
 # Bepo Discord Bot
 
+Bepo is a Discord bot designed to manage and monitor multiple homelab servers. It runs in a Docker container and connects to remote servers via SSH to control services like Docker, SnapRAID, qBittorrent, and the filesystem.
+
+## Table of Contents
+
+* [Overview](#overview)
+* [Features](#features)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Configuration](#configuration)
+* [Project Structure](#project-structure)
+* [Examples](#examples)
+* [Contributing](#contributing)
+* [License](#license)
+
 ## Overview
-Bepo is a Discord bot that runs inside a Docker container and provides a set of slash commands to manage:
 
-* **qBittorrent** – add torrents via magnet links or torrent files.  
-* **Docker** – pause or resume all containers on the host.  
-* **SnapRAID** – view status, SMART stats, and run dangerous operations (sync, scrub, fix) with a confirmation flow.  
-* **Filesystem** – query disk usage for configured host paths.
-
-All configuration is driven by a single `.env` file; the bot itself requires no manual host‑side setup beyond Docker, SnapRAID, and a running qBittorrent instance.
+Bepo solves the problem of managing scattered homelab services by centralizing control into a Discord interface. Instead of logging into multiple servers or exposing various web UIs, you can perform common maintenance tasks and checks directly from your Discord server. It is designed to be secure, using SSH keys for connectivity and restricting sensitive commands to authorized admin users.
 
 ## Features
-| Feature | Description |
-|---------|-------------|
-| **Slash commands** | Native Discord application commands, instantly available in the configured guild. |
-| **Admin gating** | Dangerous commands are limited to user IDs listed in `DISCORD_ADMIN_USER_IDS`. |
-| **Confirmation flow** | `pause`, `resume`, and SnapRAID destructive commands require an explicit confirm/cancel button. |
-| **Docker socket access** | The container mounts `/var/run/docker.sock` to control host Docker. |
-| **Environment‑driven** | All secrets and paths are read from `.env`. |
-| **Extensible** | Services are isolated in `bot/services/` and can be extended with additional cogs. |
 
-## Prerequisites
-* Docker Engine (>= 20.10) and `docker compose` installed on the host.  
-* A running qBittorrent Web UI reachable from the container.  
-* SnapRAID installed and configured on the host (if you intend to use SnapRAID commands).  
-* A Discord application with a bot token and the required OAuth scopes (`applications.commands`, `bot`). 
+*   **Multi-Server Management**: Control multiple servers defined in a central configuration file.
+*   **SSH Connectivity**: Securely connects to remote hosts using SSH keys without exposing Docker sockets or other ports.
+*   **Docker Management**: Pause and resume all containers on a host (useful for maintenance).
+*   **SnapRAID Integration**: Check status, SMART stats, and run sync/scrub/fix commands with safety confirmations.
+*   **qBittorrent Control**: Add torrents via magnet links or file uploads.
+*   **Filesystem Monitoring**: Check disk usage for specific configured paths across your servers.
+*   **Admin Gating**: Restrict dangerous commands to specific Discord user IDs.
+*   **Confirmation Flows**: Interactive buttons to confirm destructive or disruptive actions.
 
 ## Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/bepo-discord.git
-   cd bepo-discord
-   ```
+Follow these steps to get Bepo running locally or on your server.
 
-2. **Create the environment file**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your credentials and paths
-   ```
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/yourusername/bepo-discord.git
+    cd bepo-discord
+    ```
 
-3. **Build and start the container**
-   ```bash
-   docker compose up --build -d
-   ```
+2.  **Generate SSH Keys**
+    The bot needs an SSH key to connect to your servers.
+    ```bash
+    # Generate a keypair (no passphrase recommended for automation)
+    ssh-keygen -t rsa -b 4096 -f ~/.ssh/bepo_bot_key
+    ```
+    *Add the public key (`~/.ssh/bepo_bot_key.pub`) to the `~/.ssh/authorized_keys` file on every server you want the bot to manage.*
 
-4. **Verify the bot is running**
-   ```bash
-   docker logs -f discord-server-bot
-   ```
-   You should see a line similar to `Logged in as <BotName>#1234`.
+3.  **Configure Environment Variables**
+    ```bash
+    cp .env.example .env
+    # Edit .env with your Discord Token and Admin IDs
+    ```
 
-## Configuration (`.env`)
+4.  **Configure Servers**
+    ```bash
+    cp servers.json.example servers.json
+    # Edit servers.json to define your servers and their capabilities
+    ```
+
+5.  **Start the Bot**
+    ```bash
+    docker compose up --build -d
+    ```
+
+## Usage
+
+Interact with Bepo using Discord Slash Commands.
+
+| Command | Description |
+| :--- | :--- |
+| `/torrent add_link [url]` | Add a torrent via magnet link or URL. |
+| `/torrent add_file [file]` | Upload a `.torrent` file. |
+| `/fs size [target]` | Check disk usage of a configured path (e.g., pool, downloads). |
+| `/docker pause_all` | Pause all containers on a specific server (Admin only). |
+| `/docker resume_all` | Resume all containers on a specific server (Admin only). |
+| `/snapraid status` | Show SnapRAID status. |
+| `/snapraid smart` | Show SMART statistics. |
+| `/snapraid sync` | Run SnapRAID sync (Admin only). |
+| `/snapraid scrub` | Run SnapRAID scrub (Admin only). |
+
+## Configuration
+
+### Environment Variables (`.env`)
 
 | Variable | Description |
-|----------|-------------|
-| `DISCORD_BOT_TOKEN` | Bot token from the Discord developer portal. |
-| `DISCORD_APP_ID` | Application (client) ID. |
-| `DISCORD_GUILD_ID` | ID of the guild where the bot registers commands (for instant availability). |
-| `DISCORD_ADMIN_USER_IDS` | Comma‑separated list of Discord user IDs allowed to run dangerous commands. |
-| `QBITTORRENT_BASE_URL` | URL of the qBittorrent Web UI (e.g., `http://qbittorrent:8080`). |
-| `QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD` | Credentials for the qBittorrent API. |
-| `SNAPRAID_CONF_PATH` | Absolute path to the SnapRAID configuration file on the host. |
-| `HOST_POOL_PATH`, `HOST_MEDIA_SUBPATH`, `HOST_DOWNLOADS_SUBPATH` | Host directories mounted into the container for size queries. |
-| `LOG_LEVEL` | Logging verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
+| :--- | :--- |
+| `DISCORD_BOT_TOKEN` | Your Discord Bot Token. |
+| `DISCORD_APP_ID` | Your Discord Application ID. |
+| `DISCORD_GUILD_ID` | The Guild ID where commands will be registered. |
+| `DISCORD_ADMIN_USER_IDS` | Comma-separated list of User IDs allowed to run admin commands. |
+| `LOG_LEVEL` | Logging level (e.g., INFO, DEBUG). |
 
-## Usage (Discord Slash Commands)
+### Server Configuration (`servers.json`)
 
-| Command | Options | Description |
-|---------|---------|-------------|
-| `/torrent add_link` | `url` (magnet or HTTP), optional `category`, `save_path` | Adds a torrent to qBittorrent. |
-| `/torrent add_file` | `file` (attachment), optional `category`, `save_path` | Uploads a `.torrent` file and adds it. |
-| `/fs size` | `target` (`pool`, `jellyfin_media`, `qbittorrent_downloads`) | Returns the size of the selected host path. |
-| `/docker pause_all` | – | Pauses all running Docker containers (admin only, requires confirmation). |
-| `/docker resume_all` | – | Resumes all paused Docker containers (admin only, requires confirmation). |
-| `/snapraid status` | – | Shows SnapRAID status output. |
-| `/snapraid smart` | – | Shows SMART statistics. |
-| `/snapraid sync` | – | Runs a full SnapRAID sync (admin only, confirmation required). |
-| `/snapraid scrub` | – | Runs a SnapRAID scrub (admin only, confirmation required). |
-| `/snapraid fix` | – | Attempts to fix parity errors (admin only, confirmation required). |
+Define your servers in `servers.json`. Each server object includes connection details and enabled features.
 
-All commands are scoped to the guild defined in `DISCORD_GUILD_ID`. Dangerous commands present an **Confirm** / **Cancel** button; only the user who initiated the command can confirm.
+```json
+{
+  "servers": [
+    {
+      "name": "homelab",
+      "display_name": "🏠 Homelab",
+      "connection": {
+        "host": "192.168.1.100",
+        "user": "user",
+        "key_path": "/app/.ssh/id_rsa"
+      },
+      "features": ["docker", "snapraid", "filesystem"],
+      "config": {
+        "filesystem": {
+          "paths": {
+             "pool": "/mnt/pool"
+          }
+        }
+      }
+    }
+  ]
+}
+```
 
-## Development
-* **Python version**: 3.11 (specified in `bot/requirements.txt`).  
-* **Dependencies** are installed inside the Docker image via `pip install -r requirements.txt`.  
-* To add a new command, create a new cog in `bot/discord_commands/` and register it in `bot_main.py`. 
+## Project Structure
+
+```
+bepo-discord/
+  ├── bot/
+  │   ├── discord_commands/  # Cog implementations for slash commands
+  │   ├── services/          # Core logic for Docker, SnapRAID, etc.
+  │   ├── bot_main.py        # Entry point
+  │   └── config.py          # Configuration loading
+  ├── docker-compose.yml     # Docker deployment config
+  ├── servers.json.example   # Template for server config
+  └── .env.example           # Template for environment variables
+```
+
+## Examples
+
+**Checking Disk Space**
+Run `/fs size target:pool` to see the available space on your configured storage pool.
+
+**Maintenance Mode**
+1.  Run `/docker pause_all` and select the target server.
+2.  Confirm the action by clicking the **Confirm** button.
+3.  Perform your maintenance.
+4.  Run `/docker resume_all` to bring services back online.
 
 ## Contributing
-1. Fork the repository.  
-2. Create a feature branch.  
-3. Ensure code follows the existing style (PEP 8, type hints).  
-4. Add or update tests under a `tests/` directory (if applicable).  
-5. Submit a pull request with a clear description of changes.
+
+Contributions are welcome!
+
+1.  Fork the repository.
+2.  Create a feature branch (`git checkout -b feature/amazing-feature`).
+3.  Commit your changes (`git commit -m 'Add some amazing feature'`).
+4.  Push to the branch (`git push origin feature/amazing-feature`).
+5.  Open a Pull Request.
 
 ## License
-This project is licensed under the MIT License. See `LICENSE` for details.
+
+Licensed under the [CC BY‑NC‑SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/) license.
