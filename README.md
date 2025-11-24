@@ -1,6 +1,6 @@
-# Bepo Discord Bot
+# Server Manager
 
-Bepo is a Discord bot designed to manage and monitor multiple homelab servers. It runs in a Docker container and connects to remote servers via SSH to control services like Docker, SnapRAID, qBittorrent, and the filesystem.
+Server Manager is a Discord bot designed to manage and monitor multiple homelab servers. It runs in a Docker container and connects to remote servers via SSH to control services like Docker, SnapRAID, qBittorrent, and the filesystem.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ Bepo is a Discord bot designed to manage and monitor multiple homelab servers. I
 
 ## Overview
 
-Bepo solves the problem of managing scattered homelab services by centralizing control into a Discord interface. Instead of logging into multiple servers or exposing various web UIs, you can perform common maintenance tasks and checks directly from your Discord server. It is designed to be secure, using SSH keys for connectivity and restricting sensitive commands to authorized admin users.
+Server Manager solves the problem of managing scattered homelab services by centralizing control into a Discord interface. Instead of logging into multiple servers or exposing various web UIs, you can perform common maintenance tasks and checks directly from your Discord server. It is designed to be secure, using SSH keys for connectivity and restricting sensitive commands to authorized admin users.
 
 ## Features
 
@@ -29,29 +29,6 @@ Bepo solves the problem of managing scattered homelab services by centralizing c
 *   **Admin Gating**: Restrict dangerous commands to specific Discord user IDs.
 *   **Confirmation Flows**: Interactive buttons to confirm destructive or disruptive actions.
 
-## Installation
-
-Follow these steps to get Bepo running locally or on your server.
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/yourusername/bepo-discord.git
-    cd bepo-discord
-    ```
-
-2.  **Generate SSH Keys**
-    The bot needs an SSH key to connect to your servers.
-    ```bash
-    # Generate a keypair (no passphrase recommended for automation)
-    ssh-keygen -t rsa -b 4096 -f ~/.ssh/bepo_bot_key
-    ```
-    *Add the public key (`~/.ssh/bepo_bot_key.pub`) to the `~/.ssh/authorized_keys` file on every server you want the bot to manage.*
-
-3.  **Configure Environment Variables**
-    ```bash
-    cp .env.example .env
-    # Edit .env with your Discord Token and Admin IDs
-    ```
 
 4.  **Configure Servers**
     ```bash
@@ -66,7 +43,7 @@ Follow these steps to get Bepo running locally or on your server.
 
 ## Usage
 
-Interact with Bepo using Discord Slash Commands.
+Interact with Server Manager using Discord Slash Commands.
 
 | Command | Description |
 | :--- | :--- |
@@ -123,7 +100,7 @@ Define your servers in `servers.json`. Each server object includes connection de
 ## Project Structure
 
 ```
-bepo-discord/
+server-manager/
   ├── bot/
   │   ├── discord_commands/  # Cog implementations for slash commands
   │   ├── services/          # Core logic for Docker, SnapRAID, etc.

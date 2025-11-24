@@ -14,9 +14,9 @@ services:
       - ./bot:/app
       - ./servers.json:/app/servers.json:ro
       # Mount SSH private key for remote server access
-      # Create SSH key with: ssh-keygen -t rsa -b 4096 -f ~/.ssh/bepo_bot_key
+      # Create SSH key with: ssh-keygen -t rsa -b 4096 -f ~/.ssh/server_manager_key
       # Then add the public key to authorized_keys on each managed server
-      - ~/.ssh/bepo_bot_key:/app/.ssh/id_rsa:ro
+      - ~/.ssh/server_manager_key:/app/.ssh/id_rsa:ro
     # Note: No longer mounting /var/run/docker.sock as we use SSH for remote Docker access
     
     # Optional: constrain resources
